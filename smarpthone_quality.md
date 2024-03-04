@@ -1240,7 +1240,7 @@ cores and GHz as a maybe, but not able to specify which one specifically
 par(mfrow=c(2,2))
 sciplot::lineplot.CI(quality, ram_median, data = data_reduced, main = "Memory (RAM)", xlab="Data quality", ylab="RAM (GB)")
 sciplot::lineplot.CI(quality, storage_min, data = data_reduced, main = "Storage", xlab="Data quality", ylab="Storage (GB)")
-sciplot::lineplot.CI(quality, GHz_max, data = data_reduced, main ="CPU frequency", xlab="Data quality", ylab="GHz")
+sciplot::lineplot.CI(quality, GHz_max, data = data_reduced, main ="CPU frequency", xlab="Data quality", ylab="Frequency (GHz)")
 sciplot::lineplot.CI(quality, cores, data = data_reduced, main = "Number of CPU cores", xlab="Data quality", ylab="Cores")
 ```
 
