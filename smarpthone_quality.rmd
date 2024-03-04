@@ -14,13 +14,14 @@ Libraries:
 ```{r load_library, results='hide', message=F, warning=F}
 library(readr)
 library(dplyr)
+library(ordinal)
+library(tidymodels)
 ```
 
 
 Load the data:
 ```{r load_data, results='hide', message=F, warning=F}
-combined_data <- read_csv("../combined_data.csv")
-combined_data <- combined_data %>% select(-'ram5...9') %>% rename("ram5" = 'ram5...8')
+combined_data <- read_csv("../combined_data_version2.csv")
 ```
 
 The variables: 
@@ -47,10 +48,245 @@ The variables:
 
 * brand: phone brand
 
-#Explore data:
+## Remove duplicates
+Duplicates: multiple rows/patient ids. Will have price, can remove some based on currency (only keep euro/pounds). Else, try version keeping duplicates and compare to case where all duplicates are removed. Make 2 dataframes later
+
+```{r duplicates_country}
+# Dataframe with only unique patient_ids
+unique_patients <- combined_data %>%
+  group_by(patient_id) %>%
+  filter(n() == 1) %>%
+  ungroup()
+
+# Dataframe with duplicate patient_ids, filtered to include 'EUR' in price
+duplicate_patients_eur <- combined_data %>%
+  group_by(patient_id) %>%
+  filter(n() > 1 & grepl("EUR", price)) %>%
+  ungroup()
+
+# Combining both dataframes
+combined_data <- bind_rows(unique_patients, duplicate_patients_eur)
+
+```
 
 
+## Explore and transform data:
 
+Quality
+```{r expl_quality}
+# Fix the order
+combined_data <- combined_data %>% mutate(quality = factor(quality,
+                                                           levels = c("BAD", "MEDIUM", "GOOD"))
+                                          )
+table(combined_data$quality)
+```
+
+cores: most are 8 cores
+```{r expl_cores}
+table(combined_data$cores)
+hist(combined_data$cores)
+```
+
+battery cap:
+```{r expl_bat}
+hist(combined_data$battery_capacity)
+```
+
+release_year: transform to years since release (2024-release_year)
+```{r expl_year}
+table(combined_data$release_year)
+combined_data <- combined_data %>% mutate(years_since_release = 2024-release_year)
+hist(combined_data$years_since_release)
+
+```
+
+foreground_app_version, brand, os_version, sdk: make into factors
+```{r expl_categories}
+combined_data <- combined_data %>% mutate(foreground_app_version = factor(foreground_app_version),
+                                          brand = factor(brand),
+                                          os_version = factor(os_version),
+                                          sdk = factor(sdk))
+
+```
+
+GHz_min and GHz_max: keep as is
+
+storage: can have different amounts depending on model; make a max and min storage
+```{r expl_storage}
+combined_data <- combined_data %>%
+  rowwise() %>%
+  mutate(
+    storage_min = min(c(storage1, storage2, storage3, storage4, storage5, storage6, storage7, storage8, storage9),na.rm=T), 
+    storage_max = max(c(storage1, storage2, storage3, storage4, storage5, storage6, storage7, storage8, storage9),na.rm=T)
+  ) %>%
+  ungroup()
+
+hist(combined_data$storage_min)
+hist(combined_data$storage_max)
+
+```
+
+RAM: can depend on the model. Make a max, min, median, a binary (<5 across min_max), a binary <5 median
+```{r expl_ram}
+combined_data <- combined_data %>%
+  rowwise() %>%
+  mutate(
+    ram_min = min(c(ram1, ram2, ram3, ram4, ram5, ram6, ram7, ram8, ram9),na.rm=T), 
+    ram_max = max(c(ram1, ram2, ram3, ram4, ram5, ram6, ram7, ram8, ram9),na.rm=T),
+    ram_median = median(c(ram1, ram2, ram3, ram4, ram5, ram6, ram7, ram8, ram9),na.rm=T)
+  ) %>%
+  ungroup()
+
+hist(combined_data$ram_min)
+hist(combined_data$ram_max)
+hist(combined_data$ram_median)
+
+combined_data <- combined_data %>%
+  mutate(
+    ram_bin_minmax_larger_then_5 = if_else(ram_max > 5, true = 1,false = 0), 
+    ram_bin_median_larger_then_5 = if_else(ram_median > 5, true = 1,false = 0)
+  )
+
+table(combined_data$ram_bin_minmax_larger_then_5)
+table(combined_data$ram_bin_median_larger_then_5)
+
+```
+
+Make smaller dataset with only relevant variables & make no_duplicates dataset:
+```{r reduced_dataset}
+data_reduced <- combined_data %>% dplyr::select(c(patient_id, quality, cores, battery_capacity, foreground_app_version,
+                                           os_version, sdk, brand, GHz_max, GHz_min, years_since_release, storage_min,
+                                           storage_max, ram_min, ram_max, ram_median, ram_bin_minmax_larger_then_5, ram_bin_median_larger_then_5))
+
+data_reduced_noDups <- data_reduced %>%
+  group_by(patient_id) %>%
+  filter(n() == 1) %>%
+  ungroup()
+
+```
+
+## Analyses: with duplicates
+
+Ordered logistic regression (proportional odds logistic regression): too many parameters, remove brand, sdk, os_version, foreground. Also scaled all numeric variables.
+```{r ordered_log_reg}
+mod_ord_logreg1_max <- clm(quality ~ scale(cores) + scale(battery_capacity) + scale(years_since_release) +
+                          scale(GHz_max) + scale(storage_max) + scale(ram_max), data = data_reduced)
+summary(mod_ord_logreg1_max)
+
+mod_ord_logreg1_min <- clm(quality ~ scale(cores) + scale(battery_capacity) + scale(years_since_release) +
+                          scale(GHz_min) + scale(storage_min) + scale(ram_min), data = data_reduced)
+summary(mod_ord_logreg1_min)
+
+mod_ord_logreg1_median <- clm(quality ~ scale(cores) + scale(battery_capacity) + scale(years_since_release) +
+                          scale(GHz_min) + scale(storage_min) + scale(ram_median), data = data_reduced)
+summary(mod_ord_logreg1_median)
+
+```
+Nothing found here. 
+
+Try univariate models:
+```{r ordered_log_reg_univar}
+summary(clm(quality ~ scale(cores), data = data_reduced)) #almost sign
+summary(clm(quality ~ scale(battery_capacity), data = data_reduced))
+summary(clm(quality ~ scale(years_since_release) , data = data_reduced))
+summary(clm(quality ~ scale(GHz_max), data = data_reduced)) # sign
+summary(clm(quality ~ scale(GHz_min), data = data_reduced))
+summary(clm(quality ~ scale(storage_max), data = data_reduced)) # sign
+summary(clm(quality ~ scale(storage_min), data = data_reduced)) # sign
+summary(clm(quality ~ scale(ram_max), data = data_reduced)) #sign
+summary(clm(quality ~ scale(ram_min), data = data_reduced)) #sign
+summary(clm(quality ~ scale(ram_median), data = data_reduced)) #sign
+summary(clm(quality ~ scale(ram_bin_minmax_larger_then_5), data = data_reduced)) #sign
+summary(clm(quality ~ scale(ram_bin_median_larger_then_5), data = data_reduced)) #sign
+summary(clm(quality ~ sdk, data = data_reduced))
+summary(clm(quality ~ os_version, data = data_reduced)) #sign
+summary(clm(quality ~ foreground_app_version, data = data_reduced))
+
+
+```
+
+Try logistic regression where outcome is binary: good (1) or not good (0)
+```{r logistic_reg_good}
+data_reduced <- data_reduced %>% mutate(quality_good = if_else(quality == "GOOD", true = 1, false = 0))
+summary(glm(quality_good ~ scale(cores) + scale(battery_capacity) + scale(years_since_release) +
+                          scale(GHz_max) + scale(storage_max) + scale(ram_max), data = data_reduced, family=binomial()))
+
+```
+
+Try logistic regression where outcome is binary: bad (1) or not bad (0)
+```{r logistic_reg_bad}
+data_reduced <- data_reduced %>% mutate(quality_bad = if_else(quality == "BAD", true = 1, false = 0))
+summary(glm(quality_bad ~ scale(cores) + scale(battery_capacity) + scale(years_since_release) +
+                          scale(GHz_max) + scale(storage_max) + scale(ram_max), data = data_reduced, family=binomial()))
+
+```
+
+
+## Analyses: without duplicates
+
+Ordered logistic regression (proportional odds logistic regression): too many parameters, remove brand, sdk, os_version, foreground. Also scaled all numeric variables.
+```{r ordered_log_reg_noDups}
+mod_ord_logreg1_max_noDups <- clm(quality ~ scale(cores) + scale(battery_capacity) + scale(years_since_release) +
+                          scale(GHz_max) + scale(storage_max) + scale(ram_max), data = data_reduced_noDups)
+summary(mod_ord_logreg1_max_noDups)
+
+mod_ord_logreg1_min_noDups <- clm(quality ~ scale(cores) + scale(battery_capacity) + scale(years_since_release) +
+                          scale(GHz_min) + scale(storage_min) + scale(ram_min), data = data_reduced_noDups)
+summary(mod_ord_logreg1_min_noDups)
+
+mod_ord_logreg1_median_noDups <- clm(quality ~ scale(cores) + scale(battery_capacity) + scale(years_since_release) +
+                          scale(GHz_min) + scale(storage_min) + scale(ram_median), data = data_reduced_noDups)
+summary(mod_ord_logreg1_median_noDups)
+
+```
+Nothing found here. 
+
+Try univariate models:
+```{r ordered_log_reg_univar_noDups}
+summary(clm(quality ~ scale(cores), data = data_reduced_noDups)) #sign
+summary(clm(quality ~ scale(battery_capacity), data = data_reduced_noDups))
+summary(clm(quality ~ scale(years_since_release) , data = data_reduced_noDups))
+summary(clm(quality ~ scale(GHz_max), data = data_reduced_noDups)) # sign
+summary(clm(quality ~ scale(GHz_min), data = data_reduced_noDups))
+summary(clm(quality ~ scale(storage_max), data = data_reduced_noDups)) # sign
+summary(clm(quality ~ scale(storage_min), data = data_reduced_noDups)) # sign
+summary(clm(quality ~ scale(ram_max), data = data_reduced_noDups)) #sign
+summary(clm(quality ~ scale(ram_min), data = data_reduced_noDups)) #almost sign
+summary(clm(quality ~ scale(ram_median), data = data_reduced_noDups)) #sign
+summary(clm(quality ~ scale(ram_bin_minmax_larger_then_5), data = data_reduced_noDups)) #sign
+summary(clm(quality ~ scale(ram_bin_median_larger_then_5), data = data_reduced_noDups)) #almost sign
+summary(clm(quality ~ os_version, data = data_reduced_noDups))
+
+```
+
+Try logistic regression where outcome is binary: good (1) or not good (0)
+```{r logistic_reg_good_noDups}
+data_reduced_noDups <- data_reduced_noDups %>% mutate(quality_good = if_else(quality == "GOOD", true = 1, false = 0))
+summary(glm(quality_good ~ scale(cores) + scale(battery_capacity) + scale(years_since_release) +
+                          scale(GHz_max) + scale(storage_max) + scale(ram_max), data = data_reduced_noDups, family=binomial()))
+
+```
+
+Try logistic regression where outcome is binary: bad (1) or not bad (0)
+```{r logistic_reg_bad_noDups}
+data_reduced_noDups <- data_reduced_noDups %>% mutate(quality_bad = if_else(quality == "BAD", true = 1, false = 0))
+summary(glm(quality_bad ~ scale(cores) + scale(battery_capacity) + scale(years_since_release) +
+                          scale(GHz_max) + scale(storage_max) + scale(ram_max), data = data_reduced_noDups, family=binomial()))
+
+```
+
+## Make plots to show effects
+From the analyses it seems that ram and storage are the main ones with cores as a maybe, but not able to specify which one specifically
+
+```{r plots}
+par(mfrow=c(1,3))
+sciplot::lineplot.CI(quality, ram_median, data = data_reduced)
+sciplot::lineplot.CI(quality, storage_min, data = data_reduced)
+sciplot::lineplot.CI(quality, cores, data = data_reduced)
+par(mfrow=c(1,1))
+
+
+```
 
 
 
