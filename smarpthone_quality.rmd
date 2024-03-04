@@ -276,13 +276,14 @@ summary(glm(quality_bad ~ scale(cores) + scale(battery_capacity) + scale(years_s
 ```
 
 ## Make plots to show effects
-From the analyses it seems that ram and storage are the main ones with cores as a maybe, but not able to specify which one specifically
+From the analyses it seems that ram and storage are the main ones with cores and GHz as a maybe, but not able to specify which one specifically
 
 ```{r plots}
-par(mfrow=c(1,3))
-sciplot::lineplot.CI(quality, ram_median, data = data_reduced)
-sciplot::lineplot.CI(quality, storage_min, data = data_reduced)
-sciplot::lineplot.CI(quality, cores, data = data_reduced)
+par(mfrow=c(2,2))
+sciplot::lineplot.CI(quality, ram_median, data = data_reduced, main = "Memory (RAM)")
+sciplot::lineplot.CI(quality, storage_min, data = data_reduced, main = "Storage")
+sciplot::lineplot.CI(quality, GHz_max, data = data_reduced, main ="CPU frequency")
+sciplot::lineplot.CI(quality, cores, data = data_reduced, main = "Number of CPU cores")
 par(mfrow=c(1,1))
 
 
