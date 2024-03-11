@@ -38,7 +38,7 @@ The variables:
 
 * release_year: should correlate with age of phone (transform to years since release)
 
-* quality : main outcome, GOOD, BAD, MEDIUM
+* quality : main outcome, GOOD, BAD, MEDIUM. Change to High, Medium, Low
 
 * foreground_app_version : bd4qol app version  (categorical)
 
@@ -78,6 +78,10 @@ Quality
 combined_data <- combined_data %>% mutate(quality = factor(quality,
                                                            levels = c("BAD", "MEDIUM", "GOOD"))
                                           )
+
+#Change labels to Low, Medium, High
+combined_data <- combined_data %>% mutate(quality = forcats::fct_recode(factor(quality), !!!c("Low" = "BAD", "Medium" = "MEDIUM", "High" = "GOOD")))
+
 table(combined_data$quality)
 ```
 
@@ -207,7 +211,7 @@ summary(clm(quality ~ foreground_app_version, data = data_reduced))
 
 Try logistic regression where outcome is binary: good (1) or not good (0)
 ```{r logistic_reg_good}
-data_reduced <- data_reduced %>% mutate(quality_good = if_else(quality == "GOOD", true = 1, false = 0))
+data_reduced <- data_reduced %>% mutate(quality_good = if_else(quality == "High", true = 1, false = 0))
 summary(glm(quality_good ~ scale(cores) + scale(battery_capacity) + scale(years_since_release) +
                           scale(GHz_max) + scale(storage_max) + scale(ram_max), data = data_reduced, family=binomial()))
 
@@ -215,7 +219,7 @@ summary(glm(quality_good ~ scale(cores) + scale(battery_capacity) + scale(years_
 
 Try logistic regression where outcome is binary: bad (1) or not bad (0)
 ```{r logistic_reg_bad}
-data_reduced <- data_reduced %>% mutate(quality_bad = if_else(quality == "BAD", true = 1, false = 0))
+data_reduced <- data_reduced %>% mutate(quality_bad = if_else(quality == "Low", true = 1, false = 0))
 summary(glm(quality_bad ~ scale(cores) + scale(battery_capacity) + scale(years_since_release) +
                           scale(GHz_max) + scale(storage_max) + scale(ram_max), data = data_reduced, family=binomial()))
 
@@ -261,7 +265,7 @@ summary(clm(quality ~ os_version, data = data_reduced_noDups))
 
 Try logistic regression where outcome is binary: good (1) or not good (0)
 ```{r logistic_reg_good_noDups}
-data_reduced_noDups <- data_reduced_noDups %>% mutate(quality_good = if_else(quality == "GOOD", true = 1, false = 0))
+data_reduced_noDups <- data_reduced_noDups %>% mutate(quality_good = if_else(quality == "High", true = 1, false = 0))
 summary(glm(quality_good ~ scale(cores) + scale(battery_capacity) + scale(years_since_release) +
                           scale(GHz_max) + scale(storage_max) + scale(ram_max), data = data_reduced_noDups, family=binomial()))
 
@@ -269,7 +273,7 @@ summary(glm(quality_good ~ scale(cores) + scale(battery_capacity) + scale(years_
 
 Try logistic regression where outcome is binary: bad (1) or not bad (0)
 ```{r logistic_reg_bad_noDups}
-data_reduced_noDups <- data_reduced_noDups %>% mutate(quality_bad = if_else(quality == "BAD", true = 1, false = 0))
+data_reduced_noDups <- data_reduced_noDups %>% mutate(quality_bad = if_else(quality == "Low", true = 1, false = 0))
 summary(glm(quality_bad ~ scale(cores) + scale(battery_capacity) + scale(years_since_release) +
                           scale(GHz_max) + scale(storage_max) + scale(ram_max), data = data_reduced_noDups, family=binomial()))
 

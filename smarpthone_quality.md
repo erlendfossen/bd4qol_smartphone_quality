@@ -40,7 +40,7 @@ The variables:
 - release_year: should correlate with age of phone (transform to years
   since release)
 
-- quality : main outcome, GOOD, BAD, MEDIUM
+- quality : main outcome, GOOD, BAD, MEDIUM. Change to High, Medium, Low
 
 - foreground_app_version : bd4qol app version (categorical)
 
@@ -83,11 +83,15 @@ Quality
 combined_data <- combined_data %>% mutate(quality = factor(quality,
                                                            levels = c("BAD", "MEDIUM", "GOOD"))
                                           )
+
+#Change labels to Low, Medium, High
+combined_data <- combined_data %>% mutate(quality = forcats::fct_recode(factor(quality), !!!c("Low" = "BAD", "Medium" = "MEDIUM", "High" = "GOOD")))
+
 table(combined_data$quality)
 ```
 
     ## 
-    ##    BAD MEDIUM   GOOD 
+    ##    Low Medium   High 
     ##     64     21     92
 
 cores: most are 8 cores
@@ -267,8 +271,8 @@ summary(mod_ord_logreg1_max)
     ## 
     ## Threshold coefficients:
     ##             Estimate Std. Error z value
-    ## BAD|MEDIUM  -0.61654    0.16265  -3.791
-    ## MEDIUM|GOOD -0.09902    0.15591  -0.635
+    ## Low|Medium  -0.61654    0.16265  -3.791
+    ## Medium|High -0.09902    0.15591  -0.635
     ## (5 observations deleted due to missingness)
 
 ``` r
@@ -303,8 +307,8 @@ summary(mod_ord_logreg1_min)
     ## 
     ## Threshold coefficients:
     ##             Estimate Std. Error z value
-    ## BAD|MEDIUM  -0.60834    0.16240  -3.746
-    ## MEDIUM|GOOD -0.08834    0.15560  -0.568
+    ## Low|Medium  -0.60834    0.16240  -3.746
+    ## Medium|High -0.08834    0.15560  -0.568
     ## (5 observations deleted due to missingness)
 
 ``` r
@@ -337,8 +341,8 @@ summary(mod_ord_logreg1_median)
     ## 
     ## Threshold coefficients:
     ##             Estimate Std. Error z value
-    ## BAD|MEDIUM  -0.60771    0.16238  -3.743
-    ## MEDIUM|GOOD -0.08727    0.15561  -0.561
+    ## Low|Medium  -0.60771    0.16238  -3.743
+    ## Medium|High -0.08727    0.15561  -0.561
     ## (5 observations deleted due to missingness)
 
 Nothing found here.
@@ -363,8 +367,8 @@ summary(clm(quality ~ scale(cores), data = data_reduced)) #almost sign
     ## 
     ## Threshold coefficients:
     ##             Estimate Std. Error z value
-    ## BAD|MEDIUM  -0.57563    0.15835  -3.635
-    ## MEDIUM|GOOD -0.07503    0.15202  -0.494
+    ## Low|Medium  -0.57563    0.15835  -3.635
+    ## Medium|High -0.07503    0.15202  -0.494
     ## (5 observations deleted due to missingness)
 
 ``` r
@@ -383,8 +387,8 @@ summary(clm(quality ~ scale(battery_capacity), data = data_reduced))
     ## 
     ## Threshold coefficients:
     ##             Estimate Std. Error z value
-    ## BAD|MEDIUM  -0.56628    0.15671  -3.614
-    ## MEDIUM|GOOD -0.07503    0.15076  -0.498
+    ## Low|Medium  -0.56628    0.15671  -3.614
+    ## Medium|High -0.07503    0.15076  -0.498
     ## (5 observations deleted due to missingness)
 
 ``` r
@@ -403,8 +407,8 @@ summary(clm(quality ~ scale(years_since_release) , data = data_reduced))
     ## 
     ## Threshold coefficients:
     ##             Estimate Std. Error z value
-    ## BAD|MEDIUM  -0.57220    0.15717  -3.641
-    ## MEDIUM|GOOD -0.07811    0.15114  -0.517
+    ## Low|Medium  -0.57220    0.15717  -3.641
+    ## Medium|High -0.07811    0.15114  -0.517
     ## (5 observations deleted due to missingness)
 
 ``` r
@@ -425,8 +429,8 @@ summary(clm(quality ~ scale(GHz_max), data = data_reduced)) # sign
     ## 
     ## Threshold coefficients:
     ##             Estimate Std. Error z value
-    ## BAD|MEDIUM  -0.59326    0.15916  -3.727
-    ## MEDIUM|GOOD -0.08917    0.15300  -0.583
+    ## Low|Medium  -0.59326    0.15916  -3.727
+    ## Medium|High -0.08917    0.15300  -0.583
     ## (5 observations deleted due to missingness)
 
 ``` r
@@ -445,8 +449,8 @@ summary(clm(quality ~ scale(GHz_min), data = data_reduced))
     ## 
     ## Threshold coefficients:
     ##             Estimate Std. Error z value
-    ## BAD|MEDIUM  -0.58035    0.15749  -3.685
-    ## MEDIUM|GOOD -0.08611    0.15122  -0.569
+    ## Low|Medium  -0.58035    0.15749  -3.685
+    ## Medium|High -0.08611    0.15122  -0.569
     ## (5 observations deleted due to missingness)
 
 ``` r
@@ -467,8 +471,8 @@ summary(clm(quality ~ scale(storage_max), data = data_reduced)) # sign
     ## 
     ## Threshold coefficients:
     ##             Estimate Std. Error z value
-    ## BAD|MEDIUM   -0.6192     0.1617  -3.829
-    ## MEDIUM|GOOD  -0.1089     0.1553  -0.701
+    ## Low|Medium   -0.6192     0.1617  -3.829
+    ## Medium|High  -0.1089     0.1553  -0.701
     ## (5 observations deleted due to missingness)
 
 ``` r
@@ -489,8 +493,8 @@ summary(clm(quality ~ scale(storage_min), data = data_reduced)) # sign
     ## 
     ## Threshold coefficients:
     ##             Estimate Std. Error z value
-    ## BAD|MEDIUM  -0.60974    0.16129  -3.780
-    ## MEDIUM|GOOD -0.09498    0.15462  -0.614
+    ## Low|Medium  -0.60974    0.16129  -3.780
+    ## Medium|High -0.09498    0.15462  -0.614
     ## (5 observations deleted due to missingness)
 
 ``` r
@@ -511,8 +515,8 @@ summary(clm(quality ~ scale(ram_max), data = data_reduced)) #sign
     ## 
     ## Threshold coefficients:
     ##             Estimate Std. Error z value
-    ## BAD|MEDIUM  -0.60134    0.16009  -3.756
-    ## MEDIUM|GOOD -0.09213    0.15341  -0.601
+    ## Low|Medium  -0.60134    0.16009  -3.756
+    ## Medium|High -0.09213    0.15341  -0.601
     ## (5 observations deleted due to missingness)
 
 ``` r
@@ -533,8 +537,8 @@ summary(clm(quality ~ scale(ram_min), data = data_reduced)) #sign
     ## 
     ## Threshold coefficients:
     ##             Estimate Std. Error z value
-    ## BAD|MEDIUM  -0.59091    0.15927  -3.710
-    ## MEDIUM|GOOD -0.08586    0.15293  -0.561
+    ## Low|Medium  -0.59091    0.15927  -3.710
+    ## Medium|High -0.08586    0.15293  -0.561
     ## (5 observations deleted due to missingness)
 
 ``` r
@@ -555,8 +559,8 @@ summary(clm(quality ~ scale(ram_median), data = data_reduced)) #sign
     ## 
     ## Threshold coefficients:
     ##             Estimate Std. Error z value
-    ## BAD|MEDIUM  -0.60743    0.16103  -3.772
-    ## MEDIUM|GOOD -0.09442    0.15448  -0.611
+    ## Low|Medium  -0.60743    0.16103  -3.772
+    ## Medium|High -0.09442    0.15448  -0.611
     ## (5 observations deleted due to missingness)
 
 ``` r
@@ -577,8 +581,8 @@ summary(clm(quality ~ scale(ram_bin_minmax_larger_then_5), data = data_reduced))
     ## 
     ## Threshold coefficients:
     ##             Estimate Std. Error z value
-    ## BAD|MEDIUM  -0.59119    0.15876  -3.724
-    ## MEDIUM|GOOD -0.08874    0.15236  -0.582
+    ## Low|Medium  -0.59119    0.15876  -3.724
+    ## Medium|High -0.08874    0.15236  -0.582
     ## (5 observations deleted due to missingness)
 
 ``` r
@@ -599,8 +603,8 @@ summary(clm(quality ~ scale(ram_bin_median_larger_then_5), data = data_reduced))
     ## 
     ## Threshold coefficients:
     ##             Estimate Std. Error z value
-    ## BAD|MEDIUM  -0.58580    0.15864  -3.693
-    ## MEDIUM|GOOD -0.08349    0.15243  -0.548
+    ## Low|Medium  -0.58580    0.15864  -3.693
+    ## Medium|High -0.08349    0.15243  -0.548
     ## (5 observations deleted due to missingness)
 
 ``` r
@@ -625,8 +629,8 @@ summary(clm(quality ~ sdk, data = data_reduced))
     ## 
     ## Threshold coefficients:
     ##             Estimate Std. Error z value
-    ## BAD|MEDIUM   -0.2647     1.4277  -0.185
-    ## MEDIUM|GOOD   0.2647     1.4277   0.185
+    ## Low|Medium   -0.2647     1.4277  -0.185
+    ## Medium|High   0.2647     1.4277   0.185
     ## (5 observations deleted due to missingness)
 
 ``` r
@@ -653,8 +657,8 @@ summary(clm(quality ~ os_version, data = data_reduced)) #sign
     ## 
     ## Threshold coefficients:
     ##             Estimate Std. Error z value
-    ## BAD|MEDIUM  -0.04689    0.28244  -0.166
-    ## MEDIUM|GOOD  0.48246    0.28504   1.693
+    ## Low|Medium  -0.04689    0.28244  -0.166
+    ## Medium|High  0.48246    0.28504   1.693
     ## (5 observations deleted due to missingness)
 
 ``` r
@@ -677,15 +681,15 @@ summary(clm(quality ~ foreground_app_version, data = data_reduced))
     ## 
     ## Threshold coefficients:
     ##             Estimate Std. Error z value
-    ## BAD|MEDIUM     20.41         NA      NA
-    ## MEDIUM|GOOD    20.91         NA      NA
+    ## Low|Medium     20.41         NA      NA
+    ## Medium|High    20.91         NA      NA
     ## (6 observations deleted due to missingness)
 
 Try logistic regression where outcome is binary: good (1) or not good
 (0)
 
 ``` r
-data_reduced <- data_reduced %>% mutate(quality_good = if_else(quality == "GOOD", true = 1, false = 0))
+data_reduced <- data_reduced %>% mutate(quality_good = if_else(quality == "High", true = 1, false = 0))
 summary(glm(quality_good ~ scale(cores) + scale(battery_capacity) + scale(years_since_release) +
                           scale(GHz_max) + scale(storage_max) + scale(ram_max), data = data_reduced, family=binomial()))
 ```
@@ -722,7 +726,7 @@ summary(glm(quality_good ~ scale(cores) + scale(battery_capacity) + scale(years_
 Try logistic regression where outcome is binary: bad (1) or not bad (0)
 
 ``` r
-data_reduced <- data_reduced %>% mutate(quality_bad = if_else(quality == "BAD", true = 1, false = 0))
+data_reduced <- data_reduced %>% mutate(quality_bad = if_else(quality == "Low", true = 1, false = 0))
 summary(glm(quality_bad ~ scale(cores) + scale(battery_capacity) + scale(years_since_release) +
                           scale(GHz_max) + scale(storage_max) + scale(ram_max), data = data_reduced, family=binomial()))
 ```
@@ -794,8 +798,8 @@ summary(mod_ord_logreg1_max_noDups)
     ## 
     ## Threshold coefficients:
     ##             Estimate Std. Error z value
-    ## BAD|MEDIUM   -0.5992     0.1802  -3.325
-    ## MEDIUM|GOOD  -0.2935     0.1746  -1.681
+    ## Low|Medium   -0.5992     0.1802  -3.325
+    ## Medium|High  -0.2935     0.1746  -1.681
     ## (2 observations deleted due to missingness)
 
 ``` r
@@ -828,8 +832,8 @@ summary(mod_ord_logreg1_min_noDups)
     ## 
     ## Threshold coefficients:
     ##             Estimate Std. Error z value
-    ## BAD|MEDIUM   -0.5796     0.1780  -3.257
-    ## MEDIUM|GOOD  -0.2757     0.1725  -1.598
+    ## Low|Medium   -0.5796     0.1780  -3.257
+    ## Medium|High  -0.2757     0.1725  -1.598
     ## (2 observations deleted due to missingness)
 
 ``` r
@@ -862,8 +866,8 @@ summary(mod_ord_logreg1_median_noDups)
     ## 
     ## Threshold coefficients:
     ##             Estimate Std. Error z value
-    ## BAD|MEDIUM   -0.5807     0.1784  -3.256
-    ## MEDIUM|GOOD  -0.2754     0.1729  -1.593
+    ## Low|Medium   -0.5807     0.1784  -3.256
+    ## Medium|High  -0.2754     0.1729  -1.593
     ## (2 observations deleted due to missingness)
 
 Nothing found here.
@@ -888,8 +892,8 @@ summary(clm(quality ~ scale(cores), data = data_reduced_noDups)) #sign
     ## 
     ## Threshold coefficients:
     ##             Estimate Std. Error z value
-    ## BAD|MEDIUM   -0.5616     0.1752  -3.204
-    ## MEDIUM|GOOD  -0.2645     0.1700  -1.556
+    ## Low|Medium   -0.5616     0.1752  -3.204
+    ## Medium|High  -0.2645     0.1700  -1.556
     ## (2 observations deleted due to missingness)
 
 ``` r
@@ -908,8 +912,8 @@ summary(clm(quality ~ scale(battery_capacity), data = data_reduced_noDups))
     ## 
     ## Threshold coefficients:
     ##             Estimate Std. Error z value
-    ## BAD|MEDIUM   -0.5521     0.1725  -3.200
-    ## MEDIUM|GOOD  -0.2639     0.1676  -1.574
+    ## Low|Medium   -0.5521     0.1725  -3.200
+    ## Medium|High  -0.2639     0.1676  -1.574
     ## (2 observations deleted due to missingness)
 
 ``` r
@@ -928,8 +932,8 @@ summary(clm(quality ~ scale(years_since_release) , data = data_reduced_noDups))
     ## 
     ## Threshold coefficients:
     ##             Estimate Std. Error z value
-    ## BAD|MEDIUM   -0.5519     0.1727  -3.196
-    ## MEDIUM|GOOD  -0.2632     0.1678  -1.569
+    ## Low|Medium   -0.5519     0.1727  -3.196
+    ## Medium|High  -0.2632     0.1678  -1.569
     ## (2 observations deleted due to missingness)
 
 ``` r
@@ -950,8 +954,8 @@ summary(clm(quality ~ scale(GHz_max), data = data_reduced_noDups)) # sign
     ## 
     ## Threshold coefficients:
     ##             Estimate Std. Error z value
-    ## BAD|MEDIUM   -0.5718     0.1756  -3.256
-    ## MEDIUM|GOOD  -0.2749     0.1706  -1.612
+    ## Low|Medium   -0.5718     0.1756  -3.256
+    ## Medium|High  -0.2749     0.1706  -1.612
     ## (2 observations deleted due to missingness)
 
 ``` r
@@ -970,8 +974,8 @@ summary(clm(quality ~ scale(GHz_min), data = data_reduced_noDups))
     ## 
     ## Threshold coefficients:
     ##             Estimate Std. Error z value
-    ## BAD|MEDIUM   -0.5599     0.1735  -3.227
-    ## MEDIUM|GOOD  -0.2689     0.1684  -1.597
+    ## Low|Medium   -0.5599     0.1735  -3.227
+    ## Medium|High  -0.2689     0.1684  -1.597
     ## (2 observations deleted due to missingness)
 
 ``` r
@@ -992,8 +996,8 @@ summary(clm(quality ~ scale(storage_max), data = data_reduced_noDups)) # sign
     ## 
     ## Threshold coefficients:
     ##             Estimate Std. Error z value
-    ## BAD|MEDIUM   -0.6001     0.1786  -3.361
-    ## MEDIUM|GOOD  -0.3006     0.1733  -1.734
+    ## Low|Medium   -0.6001     0.1786  -3.361
+    ## Medium|High  -0.3006     0.1733  -1.734
     ## (2 observations deleted due to missingness)
 
 ``` r
@@ -1014,8 +1018,8 @@ summary(clm(quality ~ scale(storage_min), data = data_reduced_noDups)) # sign
     ## 
     ## Threshold coefficients:
     ##             Estimate Std. Error z value
-    ## BAD|MEDIUM   -0.5752     0.1762  -3.265
-    ## MEDIUM|GOOD  -0.2770     0.1709  -1.620
+    ## Low|Medium   -0.5752     0.1762  -3.265
+    ## Medium|High  -0.2770     0.1709  -1.620
     ## (2 observations deleted due to missingness)
 
 ``` r
@@ -1036,8 +1040,8 @@ summary(clm(quality ~ scale(ram_max), data = data_reduced_noDups)) #sign
     ## 
     ## Threshold coefficients:
     ##             Estimate Std. Error z value
-    ## BAD|MEDIUM   -0.5756     0.1760  -3.270
-    ## MEDIUM|GOOD  -0.2773     0.1707  -1.625
+    ## Low|Medium   -0.5756     0.1760  -3.270
+    ## Medium|High  -0.2773     0.1707  -1.625
     ## (2 observations deleted due to missingness)
 
 ``` r
@@ -1058,8 +1062,8 @@ summary(clm(quality ~ scale(ram_min), data = data_reduced_noDups)) #almost sign
     ## 
     ## Threshold coefficients:
     ##             Estimate Std. Error z value
-    ## BAD|MEDIUM   -0.5605     0.1743  -3.215
-    ## MEDIUM|GOOD  -0.2669     0.1693  -1.577
+    ## Low|Medium   -0.5605     0.1743  -3.215
+    ## Medium|High  -0.2669     0.1693  -1.577
     ## (2 observations deleted due to missingness)
 
 ``` r
@@ -1080,8 +1084,8 @@ summary(clm(quality ~ scale(ram_median), data = data_reduced_noDups)) #sign
     ## 
     ## Threshold coefficients:
     ##             Estimate Std. Error z value
-    ## BAD|MEDIUM   -0.5808     0.1772  -3.278
-    ## MEDIUM|GOOD  -0.2801     0.1719  -1.630
+    ## Low|Medium   -0.5808     0.1772  -3.278
+    ## Medium|High  -0.2801     0.1719  -1.630
     ## (2 observations deleted due to missingness)
 
 ``` r
@@ -1102,8 +1106,8 @@ summary(clm(quality ~ scale(ram_bin_minmax_larger_then_5), data = data_reduced_n
     ## 
     ## Threshold coefficients:
     ##             Estimate Std. Error z value
-    ## BAD|MEDIUM   -0.5661     0.1749  -3.236
-    ## MEDIUM|GOOD  -0.2703     0.1698  -1.592
+    ## Low|Medium   -0.5661     0.1749  -3.236
+    ## Medium|High  -0.2703     0.1698  -1.592
     ## (2 observations deleted due to missingness)
 
 ``` r
@@ -1124,8 +1128,8 @@ summary(clm(quality ~ scale(ram_bin_median_larger_then_5), data = data_reduced_n
     ## 
     ## Threshold coefficients:
     ##             Estimate Std. Error z value
-    ## BAD|MEDIUM   -0.5620     0.1745  -3.220
-    ## MEDIUM|GOOD  -0.2676     0.1695  -1.579
+    ## Low|Medium   -0.5620     0.1745  -3.220
+    ## Medium|High  -0.2676     0.1695  -1.579
     ## (2 observations deleted due to missingness)
 
 ``` r
@@ -1150,15 +1154,15 @@ summary(clm(quality ~ os_version, data = data_reduced_noDups))
     ## 
     ## Threshold coefficients:
     ##             Estimate Std. Error z value
-    ## BAD|MEDIUM  -0.25497    0.44092  -0.578
-    ## MEDIUM|GOOD  0.04874    0.44038   0.111
+    ## Low|Medium  -0.25497    0.44092  -0.578
+    ## Medium|High  0.04874    0.44038   0.111
     ## (2 observations deleted due to missingness)
 
 Try logistic regression where outcome is binary: good (1) or not good
 (0)
 
 ``` r
-data_reduced_noDups <- data_reduced_noDups %>% mutate(quality_good = if_else(quality == "GOOD", true = 1, false = 0))
+data_reduced_noDups <- data_reduced_noDups %>% mutate(quality_good = if_else(quality == "High", true = 1, false = 0))
 summary(glm(quality_good ~ scale(cores) + scale(battery_capacity) + scale(years_since_release) +
                           scale(GHz_max) + scale(storage_max) + scale(ram_max), data = data_reduced_noDups, family=binomial()))
 ```
@@ -1195,7 +1199,7 @@ summary(glm(quality_good ~ scale(cores) + scale(battery_capacity) + scale(years_
 Try logistic regression where outcome is binary: bad (1) or not bad (0)
 
 ``` r
-data_reduced_noDups <- data_reduced_noDups %>% mutate(quality_bad = if_else(quality == "BAD", true = 1, false = 0))
+data_reduced_noDups <- data_reduced_noDups %>% mutate(quality_bad = if_else(quality == "Low", true = 1, false = 0))
 summary(glm(quality_bad ~ scale(cores) + scale(battery_capacity) + scale(years_since_release) +
                           scale(GHz_max) + scale(storage_max) + scale(ram_max), data = data_reduced_noDups, family=binomial()))
 ```
