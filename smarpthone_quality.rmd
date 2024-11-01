@@ -52,7 +52,7 @@ The variables:
 Duplicates: multiple rows/patient ids. Will have price, can remove some based on currency (only keep euro/pounds). Else, try version keeping duplicates and compare to case where all duplicates are removed. Make 2 dataframes later
 
 ```{r duplicates_country}
-# Dataframe with only unique patient_ids
+# Dataframe with only unique patient_ids (i.e. remove all patients with duplicates)
 unique_patients <- combined_data %>%
   group_by(patient_id) %>%
   filter(n() == 1) %>%
